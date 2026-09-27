@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Legal Gaslighting Detector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FFFFFF;
+    --surface: #F5F5F5;
+    --surface2: #EBEBEB;
+    --border: #DEDEDE;
+    --text: #111111;
+    --muted: #333333;
+    --muted2: #555555;
+    --red: #D62839;
+    --orange: #E05C1A;
+    --amber: #C98A00;
+    --green: #1A7F3C;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100%;
+  }
+
+  /* Layout */
+  .site-header {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .site-logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--red);
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+
+  .site-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+    max-width: 22ch;
+  }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: 17px;
+    max-width: 52ch;
+    line-height: 1.65;
+  }
+
+  /* Analyzer section */
+  .analyzer {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .examples-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+
+  .examples-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .example-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .example-btn:hover { border-color: var(--muted2); color: var(--text); }
+
+  .input-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 16px 18px;
+    resize: vertical;
+    min-height: 160px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea::placeholder { color: var(--muted2); }
+  textarea:focus { border-color: var(--muted); }
+
+  .meta-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  input[type="text"], select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="text"] { flex: 1; }
+  input[type="text"]::placeholder { color: var(--muted2); }
+  input[type="text"]:focus, select:focus { border-color: var(--muted); }
+  select { background: var(--surface); cursor: pointer; }
+  select option { background: #F5F5F5; }
+
+  .api-key-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .api-key-row input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 14px;
+    outline: none;
+  }
+  .api-key-row input::placeholder { color: var(--muted2); }
+  .api-key-row input:focus { border-color: var(--muted); }
+
+  .api-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .api-note a { color: var(--amber); text-decoration: none; }
+  .api-note a:hover { text-decoration: underline; }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .submit-btn:hover { background: #c8303c; }
+  .submit-btn:disabled {
+    background: var(--surface2);
+    color: var(--muted2);
+    cursor: not-allowed;
+  }
+
+  .error-msg {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--red);
+    padding: 10px 14px;
+    border: 1px solid var(--red);
+    background: rgba(230, 57, 70, 0.08);
+  }
+
+  .disclaimer {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted2);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  /* Results */
+  .results {
+    padding: 48px 0;
+    display: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .results.visible { display: block; }
+
+  .result-header {
+    margin-bottom: 40px;
+  }
+
+  .result-source {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Score */
+  .score-block {
+    margin-bottom: 32px;
+  }
+
+  .score-number-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .score-number {
+    font-size: 88px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.04em;
+    transition: color 0.3s;
+  }
+
+  .score-denom {
+    font-size: 28px;
+    color: var(--muted2);
+    padding-bottom: 10px;
+  }
+
+  .score-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding-bottom: 10px;
+    transition: color 0.3s;
+  }
+
+  .score-bar-track {
+    height: 3px;
+    background: var(--surface2);
+    max-width: 320px;
+    margin-bottom: 6px;
+  }
+
+  .score-bar-fill {
+    height: 3px;
+    width: 0%;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+  }
+
+  .score-desc {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .verdict-text {
+    color: var(--text);
+    font-size: 17px;
+    line-height: 1.65;
+    max-width: 60ch;
+    margin-bottom: 8px;
+  }
+
+  /* Stats strip */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+
+  .stat-cell {
+    padding: 20px 24px;
+    border-right: 1px solid var(--border);
+  }
+  .stat-cell:last-child { border-right: none; }
+
+  .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* Most misleading */
+  .most-misleading {
+    border-left: 3px solid var(--red);
+    padding: 16px 20px;
+    background: rgba(230, 57, 70, 0.06);
+    margin-bottom: 36px;
+  }
+
+  .most-misleading-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red);
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .most-misleading-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* Original statement */
+  .original-block {
+    margin-bottom: 40px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+
+  .original-text {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    border-left: 2px solid var(--border);
+    padding: 12px 18px;
+    line-height: 1.75;
+  }
+
+  /* Claims */
+  .claims-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .claim-card {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 24px;
+    transition: border-color 0.15s;
+  }
+
+  .claim-card:hover { border-color: var(--muted2); }
+
+  .claim-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .claim-badges {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .claim-index {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted2);
+  }
+
+  .claim-type-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    padding: 3px 8px;
+    border: 1px solid;
+  }
+
+  .severity-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .verifiable-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    margin-left: auto;
+  }
+
+  .claim-quote {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+    border-left: 2px solid var(--border);
+    padding: 10px 16px;
+    margin-bottom: 18px;
+    line-height: 1.65;
+  }
+
+  .claim-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .claim-field-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.07em;
+    margin-bottom: 4px;
+  }
+
+  .claim-field-value {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .claim-gap-value {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .law-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  /* Colors by claim type */
+  .type-empty { color: var(--red); border-color: var(--red); }
+  .type-misleading { color: var(--orange); border-color: var(--orange); }
+  .type-weasel { color: var(--amber); border-color: var(--amber); }
+  .type-audit { color: var(--amber); border-color: var(--amber); }
+  .type-substantive { color: var(--green); border-color: var(--green); }
+  .type-omission { color: var(--muted); border-color: var(--muted); }
+
+  .gap-empty { color: var(--red); }
+  .gap-misleading { color: var(--orange); }
+  .gap-weasel { color: var(--amber); }
+  .gap-audit { color: var(--amber); }
+  .gap-substantive { color: var(--green); }
+  .gap-omission { color: var(--muted); }
+
+  /* Library */
+  .library-section {
+    padding: 48px 0 80px;
+  }
+
+  .library-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 24px;
+  }
+
+  .library-card {
+    background: var(--bg);
+    padding: 24px;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+
+  .library-card:hover { background: var(--surface); }
+
+  .library-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .library-company {
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .library-type {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+
+  .library-score {
+    font-size: 26px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .library-excerpt {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.65;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .library-action {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted2);
+    margin-top: 12px;
+    transition: color 0.12s;
+  }
+
+  .library-card:hover .library-action { color: var(--muted); }
+
+  /* Loading state */
+  .loading-overlay {
+    display: none;
+    padding: 48px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .loading-overlay.visible { display: block; }
+
+  .loading-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .loading-bar-track {
+    height: 2px;
+    background: var(--surface2);
+    max-width: 280px;
+    overflow: hidden;
+  }
+
+  .loading-bar-fill {
+    height: 2px;
+    background: var(--red);
+    width: 0%;
+    animation: loadProgress 3s ease-in-out infinite;
+  }
+
+  @keyframes loadProgress {
+    0% { width: 0%; opacity: 1; }
+    70% { width: 85%; opacity: 1; }
+    85% { width: 85%; opacity: 0.6; }
+    100% { width: 85%; opacity: 1; }
+  }
+
+  .loading-status {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Copy button */
+  .copy-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    letter-spacing: 0.05em;
+  }
+  .copy-btn:hover { border-color: var(--muted2); color: var(--text); }
+
+  .result-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+
+  .back-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: color 0.15s;
+    padding: 0;
+  }
+  .back-btn:hover { color: var(--text); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .meta-row { flex-direction: column; }
+    .stats-strip { grid-template-columns: 1fr; }
+    .stat-cell { border-right: none; border-bottom: 1px solid var(--border); }
+    .stat-cell:last-child { border-bottom: none; }
+    .score-number { font-size: 64px; }
+    .library-grid { grid-template-columns: 1fr; }
+    .claim-card-header { flex-direction: column; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loading-bar-fill { animation: none; width: 60%; }
+    .score-bar-fill { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="#" class="site-logo" onclick="showHome()">Legal Gaslighting Detector</a>
+  <span class="site-tag">Open Innovation · AI × Law</span>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-eyebrow">LexHack 2026 · Open Innovation (AI × Law)</p>
+    <h1>What do they actually commit to, legally?</h1>
+    <p class="hero-sub">Select a statement from our library below. We expose the gap between what it implies and what it legally means. Live AI analysis coming soon.</p>
+  </section>
+
+  <!-- ANALYZER -->
+  <section class="analyzer" id="analyzer-section" style="display:none;"></section>
+
+  <!-- LOADING -->
+  <section class="loading-overlay" id="loading-section" style="display:none;"></section>
+
+  <!-- RESULTS -->
+  <section class="results" id="results-section">
+    <div class="result-actions">
+      <button class="back-btn" onclick="showHome()">← Analyze another statement</button>
+      <button class="copy-btn" id="copy-btn" onclick="copyResults()">Copy results</button>
+    </div>
+
+    <div class="result-header">
+      <p class="result-source" id="result-source"></p>
+
+      <div class="score-block">
+        <div class="score-number-row">
+          <span class="score-number" id="score-number">—</span>
+          <span class="score-denom">/100</span>
+          <span class="score-label" id="score-label"></span>
+        </div>
+        <div class="score-bar-track">
+          <div class="score-bar-fill" id="score-bar"></div>
+        </div>
+        <p class="score-desc">Legal substance score — higher means more honest and specific</p>
+      </div>
+
+      <p class="verdict-text" id="verdict-text"></p>
+    </div>
+
+    <div class="stats-strip" id="stats-strip">
+      <div class="stat-cell">
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-label">Claims analyzed</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value" style="color: var(--red);" id="stat-high">—</div>
+        <div class="stat-label">High severity</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value" style="color: var(--orange);" id="stat-bad">—</div>
+        <div class="stat-label">Empty or misleading</div>
+      </div>
+    </div>
+
+    <div class="most-misleading" id="most-misleading-block" style="display:none;">
+      <p class="most-misleading-label">Most misleading claim</p>
+      <p class="most-misleading-text" id="most-misleading-text"></p>
+    </div>
+
+    <div class="original-block">
+      <p class="section-label">Original statement</p>
+      <blockquote class="original-text" id="original-text"></blockquote>
+    </div>
+
+    <div>
+      <p class="section-label" id="claims-label">Claim breakdown</p>
+      <div class="claims-list" id="claims-list"></div>
+    </div>
+  </section>
+
+  <!-- LIBRARY -->
+  <section class="library-section" id="library-section">
+    <p class="section-label">Statement library — click any to see the full analysis</p>
+    <div class="library-grid" id="library-grid"></div>
+  </section>
+
+</div>
+
+<footer style="text-align:center; padding: 20px 24px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--text); letter-spacing: 0.06em;">
+  AI will be integrated in real version
+</footer>
+
+<script>
+// ─── Data ──────────────────────────────────────────────────────────────────
+
+const EXAMPLES = [
+  {
+    text: `We do not sell your personal data. We also require partners to follow rules about how they can and cannot use and disclose the data we provide. We give you transparency into the data we collect and how it is used.`,
+    source: 'Meta Privacy Policy 2024',
+    type: 'privacy_policy'
+  },
+  {
+    text: `We comply with all applicable laws and regulations. The privacy and security of our customers is our top priority. We use industry-standard security measures to protect your information.`,
+    source: 'Amazon Customer Privacy Statement',
+    type: 'corporate_statement'
+  },
+  {
+    text: `Our automated employment decision tool has been independently audited by a third-party vendor and found to be compliant with all applicable regulations. We are committed to fair and unbiased hiring practices.`,
+    source: 'HR Tech Vendor Disclosure 2024',
+    type: 'ai_disclosure'
+  },
+  {
+    text: `CBP uses facial recognition technology in a manner consistent with applicable privacy laws and civil liberties protections. All data is handled with the utmost care and in accordance with our values of transparency and accountability.`,
+    source: 'US Customs & Border Protection Statement',
+    type: 'government_statement'
+  }
+]
+
+const LIBRARY = [
+  {
+    company: 'Meta',
+    excerpt: 'We do not sell your personal data. We also require partners to follow rules about how they can and cannot use and disclose the data we provide.',
+    type: 'Privacy Policy',
+    score: 18,
+    verdict: 'Under CCPA, sharing data for advertising value qualifies as a "sale." Meta made $116B from data-driven ad targeting in 2023.',
+    claims: [
+      { claim_text: 'We do not sell your personal data', claim_type: 'misleading', legal_standard_invoked: 'CCPA (California Consumer Privacy Act)', what_it_actually_means: 'Meta does not sell data under a narrow technical definition, but shares it with advertising partners for commercial value — which CCPA defines as a sale.', gap_explanation: 'The word "sell" is used in its colloquial sense, not its legal definition. Under CCPA §1798.140(t), sharing data for cross-context behavioral advertising is a sale. Meta\'s entire business model does this.', severity: 'high', verifiable: true },
+      { claim_text: 'We require partners to follow rules about how they can and cannot use and disclose the data we provide', claim_type: 'weasel_standard', legal_standard_invoked: null, what_it_actually_means: 'Meta has internal policies for partners, but these are contractual terms it sets and enforces itself — not an independent legal standard.', gap_explanation: 'No independent enforcement mechanism is described. Meta is both the rule-setter and the auditor of compliance. This is self-regulation presented as external accountability.', severity: 'medium', verifiable: false },
+      { claim_text: 'We give you transparency into the data we collect and how it is used', claim_type: 'weasel_standard', legal_standard_invoked: null, what_it_actually_means: '"Transparency" is not a legal term. This commits to nothing specific about what data, what uses, or how it is disclosed.', gap_explanation: 'GDPR Article 13 and 14 require specific disclosures. This statement does not reference any legal standard, uses an undefined term, and makes no enforceable commitment.', severity: 'medium', verifiable: false }
+    ],
+    overall_score: 18,
+    most_misleading_claim: '"We do not sell your personal data" — under CCPA, sharing data with advertising partners for commercial targeting qualifies as a sale. Meta earned $116B doing exactly this in 2023.'
+  },
+  {
+    company: 'Amazon',
+    excerpt: 'We comply with all applicable laws and regulations. The privacy and security of our customers is our top priority.',
+    type: 'Corporate Statement',
+    score: 8,
+    verdict: 'This statement makes zero specific legal commitments. Every company says this. It is legally empty by design.',
+    claims: [
+      { claim_text: 'We comply with all applicable laws and regulations', claim_type: 'empty', legal_standard_invoked: null, what_it_actually_means: 'This is the legal minimum every company is required to do. It commits to nothing beyond what is already legally required and is impossible to verify as a positive claim.', gap_explanation: 'A company that violates the law would say the exact same thing. This phrase is designed to sound protective while making no specific commitment about any particular law, practice, or right.', severity: 'high', verifiable: false },
+      { claim_text: 'The privacy and security of our customers is our top priority', claim_type: 'weasel_standard', legal_standard_invoked: null, what_it_actually_means: '"Privacy" and "security" are not legal terms. "Top priority" is a values statement with no legal content. This commits to nothing specific, measurable, or enforceable.', gap_explanation: 'Amazon has been fined $886M by EU regulators for GDPR violations and $25M in a children\'s privacy case. Claiming privacy is a "top priority" while facing such enforcement contradicts the implied meaning.', severity: 'high', verifiable: false }
+    ],
+    overall_score: 8,
+    most_misleading_claim: '"We comply with all applicable laws and regulations" — this phrase makes zero specific commitment and is legally identical to saying nothing at all. It is designed to reassure without obligating.'
+  },
+  {
+    company: 'OpenAI',
+    excerpt: 'We take safety seriously and conduct extensive testing before deploying our models. Our systems are designed to be safe, beneficial, and understandable.',
+    type: 'AI Disclosure',
+    score: 22,
+    verdict: 'Entirely self-defined standards. No external audit, no specific safety threshold, no legal framework cited — making this statement unverifiable and legally empty.',
+    claims: [
+      { claim_text: 'We take safety seriously', claim_type: 'empty', legal_standard_invoked: null, what_it_actually_means: 'A values statement with zero legal content. No standard, no audit, no measurable threshold.', gap_explanation: 'There is no legal definition of "taking safety seriously" in AI. No independent body verified this claim. It is structurally identical to saying nothing.', severity: 'high', verifiable: false },
+      { claim_text: 'We conduct extensive testing before deploying our models', claim_type: 'weasel_standard', legal_standard_invoked: null, what_it_actually_means: 'OpenAI defines what counts as "extensive testing" and conducts it themselves. No external standard, no independent verifier.', gap_explanation: '"Extensive" is self-defined. Under the EU AI Act, high-risk AI systems require third-party conformity assessments. This statement does not reference any such external validation.', severity: 'medium', verifiable: false },
+      { claim_text: 'Our systems are designed to be safe, beneficial, and understandable', claim_type: 'weasel_standard', legal_standard_invoked: null, what_it_actually_means: 'Three terms with no legal definitions in any applicable jurisdiction. "Designed to be" does not commit to an outcome — only an intention.', gap_explanation: 'Design intention is not a legal obligation. Under the EU AI Act, actual conformity assessments and technical documentation are required for high-risk systems — not stated design intentions.', severity: 'medium', verifiable: false }
+    ],
+    overall_score: 22,
+    most_misleading_claim: '"Extensive testing" implies a rigorous, standardized process — but OpenAI defines, conducts, and evaluates this testing itself with no external standard or independent verification.'
+  },
+  {
+    company: 'Google',
+    excerpt: 'Your privacy is important to us. We build privacy features into our products and give you control over your information.',
+    type: 'Privacy Policy',
+    score: 15,
+    verdict: 'Classic privacy theater — warm language that implies protection while committing to no specific legal standard, right, or obligation.',
+    claims: [
+      { claim_text: 'Your privacy is important to us', claim_type: 'empty', legal_standard_invoked: null, what_it_actually_means: 'A sentiment, not a legal commitment. No standard, no obligation, no enforcement mechanism.', gap_explanation: 'Google has paid $391M in a location privacy settlement and $170M for child privacy violations. Stating privacy is "important" while accumulating enforcement actions reveals the gap between language and legal reality.', severity: 'high', verifiable: false },
+      { claim_text: 'We build privacy features into our products', claim_type: 'weasel_standard', legal_standard_invoked: null, what_it_actually_means: 'Google defines what constitutes a "privacy feature." This does not reference Privacy by Design under GDPR Article 25, which has specific legal requirements.', gap_explanation: 'GDPR Article 25 requires data protection by design and by default with specific technical and organizational measures. This statement invokes the concept without the legal obligation.', severity: 'medium', verifiable: false },
+      { claim_text: 'We give you control over your information', claim_type: 'misleading', legal_standard_invoked: 'GDPR Article 15-22', what_it_actually_means: 'GDPR grants specific rights: access, rectification, erasure, portability, objection. "Control" is a marketing term that implies these rights without specifically guaranteeing them.', gap_explanation: '"Control" as used here means access to settings, not the specific enforceable rights under GDPR. Users often cannot actually delete data Google holds about them across all systems.', severity: 'high', verifiable: false }
+    ],
+    overall_score: 15,
+    most_misleading_claim: '"We give you control over your information" implies GDPR-style rights but commits only to providing settings — not to the specific legal rights of access, erasure, and portability that users are actually owed.'
+  }
+]
+
+// ─── State ─────────────────────────────────────────────────────────────────
+
+let currentAnalysis = null
+
+// ─── Init ──────────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderLibrary()
+})
+
+// ─── Navigation ────────────────────────────────────────────────────────────
+
+function showHome() {
+  document.getElementById('results-section').classList.remove('visible')
+  document.getElementById('loading-section').classList.remove('visible')
+  document.getElementById('library-section').style.display = ''
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// ─── Library ────────────────────────────────────────────────────────────────
+
+function renderLibrary() {
+  const grid = document.getElementById('library-grid')
+  grid.innerHTML = ''
+  LIBRARY.forEach(item => {
+    const card = document.createElement('div')
+    card.className = 'library-card'
+    card.onclick = () => showLibraryAnalysis(item)
+    card.innerHTML = `
+      <div class="library-card-top">
+        <div>
+          <p class="library-company">${escapeHtml(item.company)}</p>
+          <p class="library-type">${escapeHtml(item.type)}</p>
+        </div>
+        <span class="library-score" style="color: ${scoreColor(item.score)}">${item.score}</span>
+      </div>
+      <p class="library-excerpt">"${escapeHtml(item.excerpt)}"</p>
+      <p class="library-action">View analysis →</p>
+    `
+    grid.appendChild(card)
+  })
+}
+
+function showLibraryAnalysis(item) {
+  const analysis = {
+    statement_text: item.excerpt,
+    source_name: `${item.company} · ${item.type}`,
+    overall_score: item.score,
+    verdict: item.verdict,
+    most_misleading_claim: item.most_misleading_claim,
+    claims: item.claims
+  }
+  currentAnalysis = analysis
+  renderResults(analysis)
+}
+
+// ─── Share / copy ────────────────────────────────────────────────────────────
+
+function copyResults() {
+  if (!currentAnalysis) return
+  const lines = [
+    `Legal Gaslighting Detector — ${currentAnalysis.source_name || 'Analysis'}`,
+    `Legal Substance Score: ${currentAnalysis.overall_score}/100`,
+    `Verdict: ${currentAnalysis.verdict}`,
+    '',
+    `Most misleading: ${currentAnalysis.most_misleading_claim}`,
+    '',
+    ...(currentAnalysis.claims || []).map((c, i) =>
+      `[${i + 1}] ${c.claim_type.toUpperCase()} — "${c.claim_text}"\n    Gap: ${c.gap_explanation}`
+    ),
+    '',
+    'Analyzed at LexHack 2026 — Legal Gaslighting Detector'
+  ]
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    const btn = document.getElementById('copy-btn')
+    btn.textContent = 'Copied!'
+    setTimeout(() => { btn.textContent = 'Copy results' }, 2000)
+  })
+}
+
+// ─── Render results ──────────────────────────────────────────────────────────
+
+function renderResults(analysis) {
+  // Show / hide sections
+  document.getElementById('library-section').style.display = 'none'
+  document.getElementById('loading-section').classList.remove('visible')
+  document.getElementById('results-section').classList.add('visible')
+
+  // Source
+  document.getElementById('result-source').textContent = analysis.source_name || ''
+
+  // Score
+  const score = analysis.overall_score ?? 0
+  const scoreEl = document.getElementById('score-number')
+  scoreEl.textContent = score
+  scoreEl.style.color = scoreColor(score)
+  document.getElementById('score-label').textContent =
+    score >= 70 ? 'SUBSTANTIVE' : score >= 40 ? 'WEAK' : 'EMPTY'
+  document.getElementById('score-label').style.color = scoreColor(score)
+  const bar = document.getElementById('score-bar')
+  bar.style.width = score + '%'
+  bar.style.background = scoreColor(score)
+
+  // Verdict
+  document.getElementById('verdict-text').textContent = analysis.verdict || ''
+
+  // Stats
+  const claims = analysis.claims || []
+  const highCount = claims.filter(c => c.severity === 'high').length
+  const badCount  = claims.filter(c => c.claim_type === 'empty' || c.claim_type === 'misleading').length
+  document.getElementById('stat-total').textContent = claims.length
+  document.getElementById('stat-high').textContent  = highCount
+  document.getElementById('stat-bad').textContent   = badCount
+
+  // Most misleading
+  const mmBlock = document.getElementById('most-misleading-block')
+  if (analysis.most_misleading_claim) {
+    mmBlock.style.display = ''
+    document.getElementById('most-misleading-text').textContent = analysis.most_misleading_claim
+  } else {
+    mmBlock.style.display = 'none'
+  }
+
+  // Original statement
+  document.getElementById('original-text').textContent = analysis.statement_text || ''
+
+  // Claims
+  const claimsLabel = document.getElementById('claims-label')
+  claimsLabel.textContent = `Claim breakdown (${claims.length})`
+  const list = document.getElementById('claims-list')
+  list.innerHTML = ''
+  claims.forEach((c, i) => {
+    const typeKey = c.claim_type === 'weasel_standard' ? 'weasel' : c.claim_type
+    const card = document.createElement('div')
+    card.className = 'claim-card'
+    card.innerHTML = `
+      <div class="claim-card-header">
+        <div class="claim-badges">
+          <span class="claim-index">#${i + 1}</span>
+          <span class="claim-type-badge type-${typeKey}">${escapeHtml(c.claim_type.replace('_', ' ').toUpperCase())}</span>
+          <span class="severity-badge">SEVERITY: ${escapeHtml((c.severity || '').toUpperCase())}</span>
+        </div>
+        <span class="verifiable-badge" style="color:${c.verifiable ? 'var(--green)' : 'var(--muted)'}">
+          ${c.verifiable ? '✓ VERIFIABLE' : '✗ UNVERIFIABLE'}
+        </span>
+      </div>
+      <blockquote class="claim-quote">"${escapeHtml(c.claim_text)}"</blockquote>
+      <div class="claim-fields">
+        ${c.legal_standard_invoked ? `
+        <div>
+          <p class="claim-field-label">LEGAL STANDARD INVOKED</p>
+          <span class="law-tag">${escapeHtml(c.legal_standard_invoked)}</span>
+        </div>` : ''}
+        <div>
+          <p class="claim-field-label">WHAT IT ACTUALLY MEANS</p>
+          <p class="claim-field-value">${escapeHtml(c.what_it_actually_means)}</p>
+        </div>
+        <div>
+          <p class="claim-field-label">THE GAP</p>
+          <p class="claim-gap-value gap-${typeKey}">${escapeHtml(c.gap_explanation)}</p>
+        </div>
+      </div>
+    `
+    list.appendChild(card)
+  })
+
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// ─── UI helpers ──────────────────────────────────────────────────────────────
+
+function scoreColor(score) {
+  if (score >= 70) return 'var(--green)'
+  if (score >= 40) return 'var(--amber)'
+  return 'var(--red)'
+}
+
+function escapeHtml(str) {
+  if (!str) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+</script>
+
+</body>
+</html>
